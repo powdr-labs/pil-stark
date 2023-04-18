@@ -15,11 +15,12 @@ const { createHash } = require("crypto");
 
 const argv = require("yargs")
     .version(version)
-    .usage("node main_prover.js -m commit.bin -c <const.bin> -t <consttree.bin> -p <pil.json> [-P <pilconfig.json>] -s <starkinfo.json> -o <proof.json> -b <public.json>")
+    .usage("node main_prover.js -m commit.bin -c <const.bin> -t <consttree.bin> -p <input.pil> [-j <input_pil.json>] [-P <pilconfig.json>] -s <starkinfo.json> -o <proof.json> -b <public.json>")
     .alias("m", "commit")
     .alias("c", "const")
     .alias("t", "consttree")
     .alias("p", "pil")
+    .alias("j", "pil-json")
     .alias("P", "pilconfig")
     .alias("s", "starkinfo")
     .alias("o", "proof")
@@ -31,17 +32,28 @@ const argv = require("yargs")
 async function run() {
     const F = new GL3();
 
+    if (typeof(argv.pil) === "string" && typeof(argv.pilJson) === "string") {
+        console.log("The options '-p' and '-j' exclude each other.");
+        process.exit(1);
+    }
+
     const commitFile = typeof(argv.commit) === "string" ?  argv.commit.trim() : "mycircuit.commit";
     const constFile = typeof(argv.const) === "string" ?  argv.const.trim() : "mycircuit.const";
     const constTreeFile = typeof(argv.consttree) === "string" ?  argv.consttree.trim() : "mycircuit.consttree";
-    const pilFile = typeof(argv.pil) === "string" ?  argv.pil.trim() : "mycircuit.pil";
     const pilConfig = typeof(argv.pilconfig) === "string" ? JSON.parse(fs.readFileSync(argv.pilconfig.trim())) : {};
     const starkInfoFile = typeof(argv.starkinfo) === "string" ?  argv.starkinfo.trim() : "mycircuit.starkinfo.json";
     const proofFile = typeof(argv.proof) === "string" ?  argv.proof.trim() : "mycircuit.proof.json";
     const zkinFile = typeof(argv.zkin) === "string" ?  argv.zkin.trim() : "mycircuit.proof.zkin.json";
     const publicFile = typeof(argv.public) === "string" ?  argv.public.trim() : "mycircuit.public.json";
 
-    const pil = await compile(F, pilFile, null, pilConfig);
+    let pil;
+    if (typeof(argv.pilJson) === "string") {
+        pil = JSON.parse(fs.readFileSync(argv.pilJson.trim()));
+    } else {
+        const pilFile = typeof(argv.pil) === "string" ?  argv.pil.trim() : "mycircuit.pil";
+        pil = await compile(F, pilFile, null, pilConfig);
+    }
+
     const starkInfo = JSON.parse(await fs.promises.readFile(starkInfoFile, "utf8"));
 
     const nBits = starkInfo.starkStruct.nBits;

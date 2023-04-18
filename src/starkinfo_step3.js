@@ -92,9 +92,9 @@ function generatePlookupZ(res, pil, ctx) {
         const z = E.cm(puCtx.zId);
         const zp = E.cm(puCtx.zId, true);
 
-        if ( typeof pil.references["Global.L1"] === "undefined") throw new Error("Global.L1 must be defined");
+        if ( typeof pil.references["Assembly.first_step"] === "undefined") throw new Error("Assembly.first_step must be defined");
 
-        const l1 = E.const(pil.references["Global.L1"].id);
+        const l1 = E.const(pil.references["Assembly.first_step"].id);
 
         const c1 = E.mul(l1,  E.sub(z, E.number(1)));
         c1.deg=2;
@@ -181,9 +181,9 @@ function generatePermutationZ(res, pil, ctx) {
         const z = E.cm(peCtx.zId);
         const zp = E.cm(peCtx.zId, true);
 
-        if ( typeof pil.references["Global.L1"] === "undefined") throw new Error("Global.L1 must be defined");
+        if ( typeof pil.references["Assembly.first_step"] === "undefined") throw new Error("Assembly.first_step must be defined");
 
-        const l1 = E.const(pil.references["Global.L1"].id);
+        const l1 = E.const(pil.references["Assembly.first_step"].id);
 
         const c1 = E.mul(l1,  E.sub(z, E.number(1)));
         c1.deg=2;
@@ -285,9 +285,9 @@ function generateConnectionsZ(res, pil, ctx) {
         const z = E.cm(ciCtx.zId);
         const zp = E.cm(ciCtx.zId, true);
 
-        if ( typeof pil.references["Global.L1"] === "undefined") throw new Error("Global.L1 must be defined");
+        if ( typeof pil.references["Assembly.first_step"] === "undefined") throw new Error("Assembly.first_step must be defined");
 
-        const l1 = E.const(pil.references["Global.L1"].id);
+        const l1 = E.const(pil.references["Assembly.first_step"].id);
 
         const c1 = E.mul(l1,  E.sub(z, E.number(1)));
         c1.deg=2;

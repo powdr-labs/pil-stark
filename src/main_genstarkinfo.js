@@ -7,8 +7,9 @@ const { compile } = require("pilcom");
 
 const argv = require("yargs")
     .version(version)
-    .usage("node main_genstarkinfo.js -p <pil.json> [-P <pilconfig.json] -s <starkstruct.json> -i <starkinfo.json>")
+    .usage("node main_genstarkinfo.js -p <input.pil> [-j <input_pil.json>] [-P <pilconfig.json] -s <starkstruct.json> -i <starkinfo.json>")
     .alias("p", "pil")
+    .alias("j", "pil-json")
     .alias("P", "pilconfig")
     .alias("s", "starkstruct")
     .alias("i", "starkinfo")
@@ -17,13 +18,24 @@ const argv = require("yargs")
 async function run() {
     const F = new F1Field();
 
-    const pilFile = typeof(argv.pil) === "string" ?  argv.pil.trim() : "mycircuit.pil";
+    if (typeof(argv.pil) === "string" && typeof(argv.pilJson) === "string") {
+        console.log("The options '-p' and '-j' exclude each other.");
+        process.exit(1);
+    }
+
     const pilConfig = typeof(argv.pilconfig) === "string" ? JSON.parse(fs.readFileSync(argv.pilconfig.trim())) : {};
 
     const starkStructFile = typeof(argv.starkstruct) === "string" ?  argv.starkstruct.trim() : "mycircuit.stark_struct.json";
     const starkInfoFile = typeof(argv.starkinfo) === "string" ?  argv.starkinfo.trim() : "mycircuit.starkinfo.json";
 
-    const pil = await compile(F, pilFile, null, pilConfig);
+    let pil;
+    if (typeof(argv.pilJson) === "string") {
+        pil = JSON.parse(fs.readFileSync(argv.pilJson.trim()));
+    } else {
+        const pilFile = typeof(argv.pil) === "string" ?  argv.pil.trim() : "mycircuit.pil";
+        pil = await compile(F, pilFile, null, pilConfig);
+    }
+
     const starkStruct = JSON.parse(await fs.promises.readFile(starkStructFile, "utf8"));
 
     const starkInfo = starkInfoGen(pil, starkStruct);

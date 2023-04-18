@@ -12,9 +12,10 @@ const {interpolate} = require("./fft_p");
 
 const argv = require("yargs")
     .version(version)
-    .usage("node main_buildconsttree.js -c const.bin -p <pil.json> [-P <pilconfig.json>] -s <starkstruct.json> -t <consttree.bin>  -v <verification_key.json>")
+    .usage("node main_buildconsttree.js -c const.bin -p <input.pil> [-j <input_pil.json>] [-P <pilconfig.json>] -s <starkstruct.json> -t <consttree.bin>  -v <verification_key.json>")
     .alias("c", "const")
     .alias("p", "pil")
+    .alias("j", "pil-json")
     .alias("P", "pilconfig")
     .alias("s", "starkstruct")
     .alias("t", "consttree")
@@ -24,6 +25,11 @@ const argv = require("yargs")
 async function run() {
     const F = new F1Field();
 
+    if (typeof(argv.pil) === "string" && typeof(argv.pilJson) === "string") {
+        console.log("The options '-p' and '-j' exclude each other.");
+        process.exit(1);
+    }
+
     const pilFile = typeof(argv.pil) === "string" ?  argv.pil.trim() : "mycircuit.pil";
     const pilConfig = typeof(argv.pilconfig) === "string" ? JSON.parse(fs.readFileSync(argv.pilconfig.trim())) : {};
     const constFile = typeof(argv.const) === "string" ?  argv.const.trim() : "mycircuit.const";
@@ -32,7 +38,14 @@ async function run() {
     const verKeyFile = typeof(argv.verkey) === "string" ?  argv.verkey.trim() : "mycircuit.verkey.json";
 
     const starkStruct = JSON.parse(await fs.promises.readFile(starkStructFile, "utf8"));
-    const pil = await compile(F, pilFile, null, pilConfig);
+
+    let pil;
+    if (typeof(argv.pilJson) === "string") {
+        pil = JSON.parse(fs.readFileSync(argv.pilJson.trim()));
+    } else {
+        const pilFile = typeof(argv.pil) === "string" ?  argv.pil.trim() : "mycircuit.pil";
+        pil = await compile(F, pilFile, null, pilConfig);
+    }
 
     const nBits = starkStruct.nBits;
     const nBitsExt = starkStruct.nBitsExt;

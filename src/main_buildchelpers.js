@@ -9,8 +9,9 @@ const buildCHelpers = require("./chelpers.js");
 
 const argv = require("yargs")
     .version(version)
-    .usage("node main_buildchelpers.js -p <pil.json> [-P <pilconfig.json] -s <starkinfo.json> -c <chelpers.cpp> [-C <classname>]")
+    .usage("node main_buildchelpers.js -p <input.pil> [-j <input_pil.json>] [-P <pilconfig.json] -s <starkinfo.json> -c <chelpers.cpp> [-C <classname>]")
     .alias("p", "pil")
+    .alias("j", "pil-json")
     .alias("P", "pilconfig")
     .alias("s", "starkinfo")
     .alias("c", "chelpers")
@@ -22,7 +23,11 @@ const argv = require("yargs")
 async function run() {
     const F = new F1Field();
 
-    const pilFile = typeof (argv.pil) === "string" ? argv.pil.trim() : "mycircuit.pil";
+    if (typeof(argv.pil) === "string" && typeof(argv.pilJson) === "string") {
+        console.log("The options '-p' and '-j' exclude each other.");
+        process.exit(1);
+    }
+
     const pilConfig = typeof (argv.pilconfig) === "string" ? JSON.parse(fs.readFileSync(argv.pilconfig.trim())) : {};
 
 
@@ -32,7 +37,14 @@ async function run() {
     const multipleCodeFiles = argv.multiple;
     const optcodes = argv.optcodes;
 
-    const pil = await compile(F, pilFile, null, pilConfig);
+    let pil;
+    if (typeof(argv.pilJson) === "string") {
+        pil = JSON.parse(fs.readFileSync(argv.pilJson.trim()));
+    } else {
+        const pilFile = typeof(argv.pil) === "string" ?  argv.pil.trim() : "mycircuit.pil";
+        pil = await compile(F, pilFile, null, pilConfig);
+    }
+
     const starkInfo = JSON.parse(await fs.promises.readFile(starkInfoFile, "utf8"));
 
     const cCode = await buildCHelpers(starkInfo, multipleCodeFiles ? { multipleCodeFiles: true, className: cls, optcodes: optcodes } : {});
