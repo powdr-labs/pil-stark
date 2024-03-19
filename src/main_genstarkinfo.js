@@ -1,8 +1,8 @@
 const fs = require("fs");
 const version = require("../package").version;
 
-const F1Field = require("./f3g");
-const starkInfoGen = require("./starkinfo.js");
+const F3g = require("./helpers/f3g.js");
+const starkInfoGen = require("./stark/stark_info.js");
 const { compile } = require("pilcom");
 
 const argv = require("yargs")
@@ -16,7 +16,7 @@ const argv = require("yargs")
     .argv;
 
 async function run() {
-    const F = new F1Field();
+    const F = new F3g();
 
     if (typeof(argv.pil) === "string" && typeof(argv.pilJson) === "string") {
         console.log("The options '-p' and '-j' exclude each other.");

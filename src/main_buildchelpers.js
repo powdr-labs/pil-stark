@@ -2,17 +2,11 @@ const fs = require("fs");
 const path = require("path");
 const version = require("../package").version;
 
-const F1Field = require("./f3g");
-const starkInfoGen = require("./starkinfo.js");
-const { compile } = require("pilcom");
-const buildCHelpers = require("./chelpers.js");
+const buildCHelpers = require("./stark/chelpers/stark_chelpers.js");
 
 const argv = require("yargs")
     .version(version)
-    .usage("node main_buildchelpers.js -p <input.pil> [-j <input_pil.json>] [-P <pilconfig.json] -s <starkinfo.json> -c <chelpers.cpp> [-C <classname>]")
-    .alias("p", "pil")
-    .alias("j", "pil-json")
-    .alias("P", "pilconfig")
+    .usage("node main_buildchelpers.js -s <starkinfo.json> -c <chelpers.cpp> [-C <classname>]")
     .alias("s", "starkinfo")
     .alias("c", "chelpers")
     .alias("C", "cls")
@@ -21,29 +15,11 @@ const argv = require("yargs")
     .argv;
 
 async function run() {
-    const F = new F1Field();
-
-    if (typeof(argv.pil) === "string" && typeof(argv.pilJson) === "string") {
-        console.log("The options '-p' and '-j' exclude each other.");
-        process.exit(1);
-    }
-
-    const pilConfig = typeof (argv.pilconfig) === "string" ? JSON.parse(fs.readFileSync(argv.pilconfig.trim())) : {};
-
-
     const cls = typeof (argv.cls) === "string" ? argv.cls.trim() : "Stark";
     const starkInfoFile = typeof (argv.starkinfo) === "string" ? argv.starkinfo.trim() : "mycircuit.starkinfo.json";
     const chelpersFile = typeof (argv.chelpers) === "string" ? argv.chelpers.trim() : "mycircuit.chelpers.cpp";
     const multipleCodeFiles = argv.multiple;
     const optcodes = argv.optcodes;
-
-    let pil;
-    if (typeof(argv.pilJson) === "string") {
-        pil = JSON.parse(fs.readFileSync(argv.pilJson.trim()));
-    } else {
-        const pilFile = typeof(argv.pil) === "string" ?  argv.pil.trim() : "mycircuit.pil";
-        pil = await compile(F, pilFile, null, pilConfig);
-    }
 
     const starkInfo = JSON.parse(await fs.promises.readFile(starkInfoFile, "utf8"));
 

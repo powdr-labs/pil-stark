@@ -2,13 +2,13 @@ const fs = require("fs");
 const version = require("../package").version;
 
 const { newConstantPolsArray, newCommitPolsArray, compile } = require("pilcom");
-const starkInfoGen = require("../src/starkinfo.js");
-const starkGen = require("../src/stark_gen.js");
+const starkGen = require("./stark/stark_gen.js");
 const JSONbig = require('json-bigint')({ useNativeBigInt: true, alwaysParseAsBig: true, storeAsString: true });
 const { proof2zkin } = require("./proof2zkin");
-const buildMerklehashGL = require("../src/merklehash_p.js");
-const buildMerklehashBN128 = require("../src/merklehash_bn128_p.js");
-const GL3 = require("./f3g.js");
+const buildMerklehashGL = require("./helpers/hash/merklehash/merklehash_p.js");
+const buildMerklehashBN128 = require("./helpers/hash/merklehash/merklehash_bn128_p.js");
+
+const F3g = require("./helpers/f3g.js");
 const { createHash } = require("crypto");
 
 
@@ -30,7 +30,7 @@ const argv = require("yargs")
     .argv;
 
 async function run() {
-    const F = new GL3();
+    const F = new F3g();
 
     if (typeof(argv.pil) === "string" && typeof(argv.pilJson) === "string") {
         console.log("The options '-p' and '-j' exclude each other.");
@@ -56,8 +56,6 @@ async function run() {
 
     const starkInfo = JSON.parse(await fs.promises.readFile(starkInfoFile, "utf8"));
 
-    const nBits = starkInfo.starkStruct.nBits;
-    const n = 1 << nBits;
 
     const constPols =  newConstantPolsArray(pil);
     await constPols.loadFromFile(constFile);

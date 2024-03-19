@@ -1,14 +1,10 @@
 const fs = require("fs");
 const version = require("../package").version;
 const JSONbig = require('json-bigint')({ useNativeBigInt: true, alwaysParseAsBig: true });
-const {BigBuffer} = require("pilcom");
 
-
-const F1Field = require("./f3g");
+const F3g = require("./helpers/f3g.js");
 const { newConstantPolsArray, compile } = require("pilcom");
-const buildMerkleHashGL = require("./merklehash_p.js");
-const buildMerkleHashBN128 = require("./merklehash_bn128_p.js");
-const {interpolate} = require("./fft_p");
+const { buildConstTree } = require("./stark/stark_buildConstTree");
 
 const argv = require("yargs")
     .version(version)
@@ -23,7 +19,7 @@ const argv = require("yargs")
     .argv;
 
 async function run() {
-    const F = new F1Field();
+    const F = new F3g();
 
     if (typeof(argv.pil) === "string" && typeof(argv.pilJson) === "string") {
         console.log("The options '-p' and '-j' exclude each other.");
@@ -47,38 +43,10 @@ async function run() {
         pil = await compile(F, pilFile, null, pilConfig);
     }
 
-    const nBits = starkStruct.nBits;
-    const nBitsExt = starkStruct.nBitsExt;
-    const n = 1 << nBits;
-    const nExt = 1 << nBitsExt;
-
-    const constPols = newConstantPolsArray(pil);
+    const constPols = newConstantPolsArray(pil, F);
     await constPols.loadFromFile(constFile);
 
-    const constBuff  = constPols.writeToBuff();
-
-    const constPolsArrayE = new BigBuffer(nExt*pil.nConstants);
-
-    await interpolate(constBuff, pil.nConstants, nBits, constPolsArrayE, nBitsExt );
-
-    let MH;
-    if (starkStruct.verificationHashType == "GL") {
-        MH = await buildMerkleHashGL();
-    } else if (starkStruct.verificationHashType == "BN128") {
-        MH = await buildMerkleHashBN128();
-    } else {
-        throw new Error("Invalid Hash Type: "+ starkStruct.verificationHashType);
-    }
-
-
-    console.log("Start merkelizing..");
-    const constTree = await MH.merkelize(constPolsArrayE, pil.nConstants, nExt);
-
-    const constRoot = MH.root(constTree);
-
-    const verKey = {
-        constRoot: constRoot
-    };
+    const {MH, constTree, verKey} = await buildConstTree(starkStruct, pil, constPols);
 
     await fs.promises.writeFile(verKeyFile, JSONbig.stringify(verKey, null, 1), "utf8");
 
@@ -94,4 +62,3 @@ run().then(()=> {
     console.log(err.stack);
     process.exit(1);
 });
-
