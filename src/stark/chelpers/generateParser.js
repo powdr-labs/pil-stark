@@ -524,6 +524,8 @@ module.exports.getAllOperations = function getAllOperations() {
     
     possibleOps.push({ dest_type: "tmp3", src0_type: "tmp3", src1_type: "xDivXSubXi"});
 
+    possibleOps.push({ dest_type: "q", src0_type: "tmp1", src1_type: "Zi"});
+
     possibleOps.push({ dest_type: "q", src0_type: "tmp3", src1_type: "Zi"});
     possibleOps.push({ dest_type: "f", src0_type: "tmp3", src1_type: "tmp3"});
     possibleOps.push({ dest_type: "f", src0_type: "tmp3"});
