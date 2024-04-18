@@ -28,7 +28,7 @@ module.exports.generateParser = function generateParser(operations, operationsUs
         "    uint8_t *ops = &parserArgs.ops[parserParams.opsOffset];\n",
         "    uint16_t *args = &parserArgs.args[parserParams.argsOffset]; \n",
         "    uint64_t* numbers = &parserArgs.numbers[parserParams.numbersOffset];\n",
-        "    __m256i numbers_[parserParams.nNumbers];\n",
+        "    simde__m256i numbers_[parserParams.nNumbers];\n",
         "    uint64_t nStages = 3;",
         "    uint64_t nextStride = domainExtended ? 1 << (starkInfo.starkStruct.nBitsExt - starkInfo.starkStruct.nBits) : 1;",
         "    uint64_t nextStrides[2] = { 0, nextStride };",
@@ -71,31 +71,31 @@ module.exports.generateParser = function generateParser(operations, operationsUs
     parserCPP.push(...[
         "#pragma omp parallel for",
         "    for(uint64_t i = 0; i < params.challenges.degree(); ++i) {",
-        "        challenges[i][0] = _mm256_set1_epi64x(params.challenges[i][0].fe);",
-        "        challenges[i][1] = _mm256_set1_epi64x(params.challenges[i][1].fe);",
-        "        challenges[i][2] = _mm256_set1_epi64x(params.challenges[i][2].fe);\n",
+        "        challenges[i][0] = simde_mm256_set1_epi64x(params.challenges[i][0].fe);",
+        "        challenges[i][1] = simde_mm256_set1_epi64x(params.challenges[i][1].fe);",
+        "        challenges[i][2] = simde_mm256_set1_epi64x(params.challenges[i][2].fe);\n",
         "        Goldilocks::Element challenges_aux[3];",
         "        challenges_aux[0] = params.challenges[i][0] + params.challenges[i][1];",
         "        challenges_aux[1] = params.challenges[i][0] + params.challenges[i][2];",
         "        challenges_aux[2] = params.challenges[i][1] + params.challenges[i][2];",
-        "        challenges_ops[i][0] = _mm256_set1_epi64x(challenges_aux[0].fe);",
-        "        challenges_ops[i][1] =  _mm256_set1_epi64x(challenges_aux[1].fe);",
-        "        challenges_ops[i][2] =  _mm256_set1_epi64x(challenges_aux[2].fe);",
+        "        challenges_ops[i][0] = simde_mm256_set1_epi64x(challenges_aux[0].fe);",
+        "        challenges_ops[i][1] =  simde_mm256_set1_epi64x(challenges_aux[1].fe);",
+        "        challenges_ops[i][2] =  simde_mm256_set1_epi64x(challenges_aux[2].fe);",
         "    }",
     ]);
 
     parserCPP.push(...[
         "#pragma omp parallel for",
         "    for(uint64_t i = 0; i < parserParams.nNumbers; ++i) {",
-        "        numbers_[i] = _mm256_set1_epi64x(numbers[i]);",
+        "        numbers_[i] = simde_mm256_set1_epi64x(numbers[i]);",
         "    }",
     ])
 
     parserCPP.push(...[
-        "    __m256i publics[starkInfo.nPublics];",
+        "    simde__m256i publics[starkInfo.nPublics];",
         "#pragma omp parallel for",
         "    for(uint64_t i = 0; i < starkInfo.nPublics; ++i) {",
-        "        publics[i] = _mm256_set1_epi64x(params.publicInputs[i].fe);",
+        "        publics[i] = simde_mm256_set1_epi64x(params.publicInputs[i].fe);",
         "    }",
     ]);
     if(vectorizeEvals) {
@@ -103,9 +103,9 @@ module.exports.generateParser = function generateParser(operations, operationsUs
             "    Goldilocks3::Element_avx evals[params.evals.degree()];",
             "#pragma omp parallel for",
             "    for(uint64_t i = 0; i < params.evals.degree(); ++i) {",
-            "        evals[i][0] = _mm256_set1_epi64x(params.evals[i][0].fe);",
-            "        evals[i][1] = _mm256_set1_epi64x(params.evals[i][1].fe);",
-            "        evals[i][2] = _mm256_set1_epi64x(params.evals[i][2].fe);",
+            "        evals[i][0] = simde_mm256_set1_epi64x(params.evals[i][0].fe);",
+            "        evals[i][1] = simde_mm256_set1_epi64x(params.evals[i][1].fe);",
+            "        evals[i][2] = simde_mm256_set1_epi64x(params.evals[i][2].fe);",
             "    }",
         ]);
     }
@@ -116,14 +116,14 @@ module.exports.generateParser = function generateParser(operations, operationsUs
         "        bool const needModule = i + nrowsBatch + nextStride >= domainSize;",
         "        uint64_t i_args = 0;\n",
         "        uint64_t offsetsDest[4];",
-        "        __m256i tmp1[parserParams.nTemp1];",
+        "        simde__m256i tmp1[parserParams.nTemp1];",
         "        Goldilocks3::Element_avx tmp3[parserParams.nTemp3];",
         "        Goldilocks3::Element_avx tmp3_;",
         "        // Goldilocks3::Element_avx tmp3_0;",
         "        Goldilocks3::Element_avx tmp3_1;",
-        "        // __m256i tmp1_0;",
-        "        __m256i tmp1_1;",
-        "        __m256i bufferT_[2*nCols];\n",
+        "        // simde__m256i tmp1_0;",
+        "        simde__m256i tmp1_1;",
+        "        simde__m256i bufferT_[2*nCols];\n",
     ]); 
 
     parserCPP.push(...[
